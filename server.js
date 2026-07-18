@@ -14,8 +14,7 @@ app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-const VISION_MODEL = process.env.VISION_MODEL || "claude-sonnet-5";
+const VISION_MODEL = process.env.VISION_MODEL || "claude-sonnet-4-6";
 
 function fileToBase64(file) {
   return file.buffer.toString("base64");
@@ -24,7 +23,7 @@ function fileToBase64(file) {
 async function identifyProduct(base64Image, mediaType) {
   const message = await anthropic.messages.create({
     model: VISION_MODEL,
-    max_tokens: 500,
+    max_tokens: 600,
     messages: [
       {
         role: "user",
@@ -35,16 +34,16 @@ async function identifyProduct(base64Image, mediaType) {
           },
           {
             type: "text",
-         text: `You are an expert product identifier. Analyze this photo carefully.
+            text: `You are an expert product identifier. Analyze this photo carefully.
 
 MOST IMPORTANT RULE: Honesty over guessing. If you are not certain, say so.
 
 For ACTION FIGURES and COLLECTIBLES:
 - ONLY name the character if you can see their name on packaging, belt, boots, or other text on the figure
-- ONLY name the character if their face/costume is 100% unmistakable (e.g. The Undertaker's all-black outfit, John Cena's bright orange)
+- ONLY name the character if their face/costume is 100% unmistakable
 - If uncertain about the character, set model to null and describe the costume in extreme detail instead
 - Look for: tattoos, hair color/style, skin tone, costume colors and patterns, accessories, any text on the figure
-- searchQuery for unknown figures: "WWE Elite action figure [exact costume description e.g. pink black graffiti trunks]"
+- searchQuery for unknown figures: "WWE Elite action figure [exact costume description]"
 
 For ALL products:
 - Look for text, logos, brand names, model numbers FIRST
@@ -77,6 +76,7 @@ Respond ONLY with valid JSON, no markdown:
     return {
       productName: "Unknown item",
       brand: null,
+      model: null,
       category: null,
       description: raw,
       searchQuery: raw.slice(0, 80),
@@ -102,9 +102,21 @@ app.post("/explain", upload.single("photo"), async (req, res) => {
 app.post("/find", upload.single("photo"), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: "No photo uploaded" });
+
+    const manualQuery = req.body?.manualQuery;
     const base64 = fileToBase64(req.file);
     const product = await identifyProduct(base64, req.file.mimetype);
-    const results = await searchRetailers(product.searchQuery);
+
+    // If user provided manual search, use that instead of AI's query
+    const searchQuery = (manualQuery && manualQuery.trim())
+      ? manualQuery.trim()
+      : product.searchQuery;
+
+    if (manualQuery && manualQuery.trim()) {
+      product.searchQuery = manualQuery.trim();
+    }
+
+    const results = await searchRetailers(searchQuery);
     res.json({ product, results });
   } catch (err) {
     console.error(err);
