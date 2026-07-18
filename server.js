@@ -35,24 +35,39 @@ async function identifyProduct(base64Image, mediaType) {
           },
           {
             type: "text",
-            text: `You are a product identification expert for a shopping app. Analyze this photo carefully.
+           text: `You are an expert product identifier with deep knowledge of toys, collectibles, sports memorabilia, fashion, electronics, and branded goods.
 
-Your goal: generate a search query that will find THIS EXACT product for sale online.
+CRITICAL RULE: Never describe what you see. IDENTIFY what it is.
 
-Rules:
-- If you see a brand name, logo, or label — use it. Brand + model is always better than description.
-- If no brand is visible, use the most specific descriptive terms possible (material + color + style + function).
-- The searchQuery must be specific enough that 80%+ of results will be the same or equivalent product.
-- Never use vague terms like "wooden clock" when you can say "himalayan salt alarm clock wood finish LED".
+Examples of WRONG behavior:
+- "Wrestling action figure in pink outfit" ❌
+- "Wooden digital alarm clock" ❌  
+- "Blue athletic shoe" ❌
+
+Examples of RIGHT behavior:
+- "Mattel WWE Elite CM Punk Action Figure - Best in the World Series" ✓
+- "Himalayan Salt Crystal Alarm Clock with LED Display" ✓
+- "Nike Air Jordan 1 Retro High OG Chicago" ✓
+
+For action figures, toys, and collectibles:
+- Identify the CHARACTER NAME (CM Punk, not "wrestler with goatee")
+- Identify the BRAND (Mattel, Hasbro, NECA)
+- Identify the SERIES/LINE if visible (WWE Elite, Basic, Ultimate Edition)
+- Look at the costume color, accessories, facial features, and any text on the figure or packaging
+
+For all products:
+- Look for ANY text, logos, labels, numbers on the product
+- Use your knowledge to identify the specific product, not just describe it
+- The searchQuery must find THIS EXACT product, not similar products
 
 Respond ONLY with valid JSON, no markdown, no extra text:
 {
-  "productName": "specific product name",
-  "brand": "brand name or null",
-  "model": "model name/number or null",
+  "productName": "Brand + Character/Model + Series (be as specific as possible)",
+  "brand": "manufacturer brand",
+  "model": "specific model, character name, or series",
   "category": "product category",
-  "description": "2-3 sentences describing key visual features",
-  "searchQuery": "most specific search string to find this exact product for sale",
+  "description": "what makes this specific version unique (costume, accessories, edition)",
+  "searchQuery": "brand + character/model + series + key distinguishing features",
   "confidence": "high | medium | low"
 }`,
           },
