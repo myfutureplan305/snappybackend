@@ -87,7 +87,7 @@ Respond ONLY with valid JSON, no markdown fences:
       description: raw,
       searchQuery: raw.slice(0, 80),
       confidence: "low",
-    };
+    };,
   }
 }
 
