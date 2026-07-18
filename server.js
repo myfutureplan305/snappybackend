@@ -35,22 +35,26 @@ async function identifyProduct(base64Image, mediaType) {
           },
           {
             type: "text",
-            text: `You are a product identification expert. Analyze this photo and identify the exact product shown.
+            text: `You are a product identification expert for a shopping app. Analyze this photo carefully.
 
-Your goal is to find the EXACT brand name and model number/name so someone can buy this specific item online.
+Your goal: generate a search query that will find THIS EXACT product for sale online.
 
-Respond ONLY with valid JSON, no markdown fences, no preamble:
+Rules:
+- If you see a brand name, logo, or label — use it. Brand + model is always better than description.
+- If no brand is visible, use the most specific descriptive terms possible (material + color + style + function).
+- The searchQuery must be specific enough that 80%+ of results will be the same or equivalent product.
+- Never use vague terms like "wooden clock" when you can say "himalayan salt alarm clock wood finish LED".
+
+Respond ONLY with valid JSON, no markdown, no extra text:
 {
-  "productName": "exact product name including brand and model if visible",
-  "brand": "brand name (look carefully at logos, labels, text on the product)",
-  "model": "model name or number if visible, else null",
+  "productName": "specific product name",
+  "brand": "brand name or null",
+  "model": "model name/number or null",
   "category": "product category",
-  "description": "brief description of key features that distinguish this specific product",
-  "searchQuery": "brand + model + key features optimized for finding this exact product for sale online",
+  "description": "2-3 sentences describing key visual features",
+  "searchQuery": "most specific search string to find this exact product for sale",
   "confidence": "high | medium | low"
-}
-
-Look carefully for any text, logos, labels, or markings on the product that identify the brand or model.`,
+}`,
           },
         ],
       },
