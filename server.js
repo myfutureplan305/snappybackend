@@ -39,38 +39,33 @@ async function identifyProduct(base64Image, mediaType) {
             },
             {
               type: "text",
-              text: `You are an expert product identifier. Analyze this photo carefully.
+              text: `You are a world-class product identification expert used in a shopping app. Your job is to identify the EXACT product in this image so users can find and buy it online.
 
-MOST IMPORTANT RULE: Honesty over guessing. If you are not certain, say so.
+CRITICAL RULES:
+1. IDENTIFY, never describe. "Nike Air Jordan 1 Retro High OG" not "white and red basketball shoe"
+2. Look for ANY text, logos, labels, tags, or packaging FIRST — this is your most reliable signal
+3. Use your training knowledge to identify specific products, models, and editions
+4. For fashion/clothing: identify brand, style name, colorway, season if possible
+5. For electronics: identify brand, model number, generation
+6. For collectibles/toys: identify character name, manufacturer, product line, series
+7. For home goods/hardware: identify type, brand, specifications
+8. searchQuery must be specific enough that the FIRST Google Shopping result would be this exact item
 
-For ACTION FIGURES and COLLECTIBLES:
-- ONLY name the character if you can see their name on packaging, belt, boots, or other text on the figure
-- ONLY name the character if their face/costume is 100% unmistakable
-- If uncertain about the character, set model to null and describe the costume in extreme detail instead
-- Look for: tattoos, hair color/style, skin tone, costume colors and patterns, accessories, any text on the figure
-- searchQuery for unknown figures: "WWE Elite action figure [exact costume description]"
+CONFIDENCE RULES:
+- "high": you can see brand/model clearly OR you recognize it with certainty from visual features
+- "medium": you recognize the product type and likely brand but not exact model
+- "low": you can only describe what you see, no specific identification possible
 
-For ALL products:
-- Look for text, logos, brand names, model numbers FIRST
-- confidence "high" = you are certain. "medium" = probable. "low" = mostly guessing
-- Never invent a specific product name when you are not sure
-
-Respond ONLY with valid JSON, no markdown:
+Respond ONLY with valid JSON, no markdown fences:
 {
-  "productName": "specific name if certain, or honest description if not",
-  "brand": "brand if visible or known, else null",
-  "model": "character or model ONLY if certain, else null",
-  "category": "product category",
-  "description": "extremely specific visual details - every color, pattern, accessory, any visible text",
-  "searchQuery": "best search to find this exact item - use costume details when character unknown",
+  "productName": "Brand + Product Name + Model/Style (as specific as possible)",
+  "brand": "exact brand name or null",
+  "model": "exact model/style name or null",
+  "category": "specific product category",
+  "description": "what makes this specific version unique - colorway, edition, key features",
+  "searchQuery": "brand model colorway/style for sale - optimized for Google Shopping",
   "confidence": "high | medium | low"
 }`,
-            },
-          ],
-        },
-      ],
-    }),
-  });
 
   const data = await response.json();
 
