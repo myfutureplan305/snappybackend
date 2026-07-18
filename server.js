@@ -35,15 +35,22 @@ async function identifyProduct(base64Image, mediaType) {
           },
           {
             type: "text",
-            text: `Identify the main product in this photo. Respond ONLY with valid JSON, no markdown fences, no preamble, in this exact shape:
+            text: `You are a product identification expert. Analyze this photo and identify the exact product shown.
+
+Your goal is to find the EXACT brand name and model number/name so someone can buy this specific item online.
+
+Respond ONLY with valid JSON, no markdown fences, no preamble:
 {
-  "productName": "short common name",
-  "brand": "brand if identifiable, else null",
-  "category": "general category, e.g. 'door hardware', 'footwear', 'kitchen appliance'",
-  "description": "1-2 sentence description covering material, style, notable features",
-  "searchQuery": "a concise search string optimized for finding this exact or closely matching product on retail sites",
+  "productName": "exact product name including brand and model if visible",
+  "brand": "brand name (look carefully at logos, labels, text on the product)",
+  "model": "model name or number if visible, else null",
+  "category": "product category",
+  "description": "brief description of key features that distinguish this specific product",
+  "searchQuery": "brand + model + key features optimized for finding this exact product for sale online",
   "confidence": "high | medium | low"
-}`,
+}
+
+Look carefully for any text, logos, labels, or markings on the product that identify the brand or model.`,
           },
         ],
       },
