@@ -35,39 +35,30 @@ async function identifyProduct(base64Image, mediaType) {
           },
           {
             type: "text",
-           text: `You are an expert product identifier with deep knowledge of toys, collectibles, sports memorabilia, fashion, electronics, and branded goods.
+         text: `You are an expert product identifier. Analyze this photo carefully.
 
-CRITICAL RULE: Never describe what you see. IDENTIFY what it is.
+MOST IMPORTANT RULE: Honesty over guessing. If you are not certain, say so.
 
-Examples of WRONG behavior:
-- "Wrestling action figure in pink outfit" ❌
-- "Wooden digital alarm clock" ❌  
-- "Blue athletic shoe" ❌
+For ACTION FIGURES and COLLECTIBLES:
+- ONLY name the character if you can see their name on packaging, belt, boots, or other text on the figure
+- ONLY name the character if their face/costume is 100% unmistakable (e.g. The Undertaker's all-black outfit, John Cena's bright orange)
+- If uncertain about the character, set model to null and describe the costume in extreme detail instead
+- Look for: tattoos, hair color/style, skin tone, costume colors and patterns, accessories, any text on the figure
+- searchQuery for unknown figures: "WWE Elite action figure [exact costume description e.g. pink black graffiti trunks]"
 
-Examples of RIGHT behavior:
-- "Mattel WWE Elite CM Punk Action Figure - Best in the World Series" ✓
-- "Himalayan Salt Crystal Alarm Clock with LED Display" ✓
-- "Nike Air Jordan 1 Retro High OG Chicago" ✓
+For ALL products:
+- Look for text, logos, brand names, model numbers FIRST
+- confidence "high" = you are certain. "medium" = probable. "low" = mostly guessing
+- Never invent a specific product name when you are not sure
 
-For action figures, toys, and collectibles:
-- Identify the CHARACTER NAME (CM Punk, not "wrestler with goatee")
-- Identify the BRAND (Mattel, Hasbro, NECA)
-- Identify the SERIES/LINE if visible (WWE Elite, Basic, Ultimate Edition)
-- Look at the costume color, accessories, facial features, and any text on the figure or packaging
-
-For all products:
-- Look for ANY text, logos, labels, numbers on the product
-- Use your knowledge to identify the specific product, not just describe it
-- The searchQuery must find THIS EXACT product, not similar products
-
-Respond ONLY with valid JSON, no markdown, no extra text:
+Respond ONLY with valid JSON, no markdown:
 {
-  "productName": "Brand + Character/Model + Series (be as specific as possible)",
-  "brand": "manufacturer brand",
-  "model": "specific model, character name, or series",
+  "productName": "specific name if certain, or honest description if not",
+  "brand": "brand if visible or known, else null",
+  "model": "character or model ONLY if certain, else null",
   "category": "product category",
-  "description": "what makes this specific version unique (costume, accessories, edition)",
-  "searchQuery": "brand + character/model + series + key distinguishing features",
+  "description": "extremely specific visual details — every color, pattern, accessory, any visible text",
+  "searchQuery": "best search to find this exact item — use costume details when character unknown",
   "confidence": "high | medium | low"
 }`,
           },
