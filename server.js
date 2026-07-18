@@ -39,33 +39,13 @@ async function identifyProduct(base64Image, mediaType) {
             },
             {
               type: "text",
-              text: `You are a world-class product identification expert used in a shopping app. Your job is to identify the EXACT product in this image so users can find and buy it online.
-
-CRITICAL RULES:
-1. IDENTIFY, never describe. "Nike Air Jordan 1 Retro High OG" not "white and red basketball shoe"
-2. Look for ANY text, logos, labels, tags, or packaging FIRST — this is your most reliable signal
-3. Use your training knowledge to identify specific products, models, and editions
-4. For fashion/clothing: identify brand, style name, colorway, season if possible
-5. For electronics: identify brand, model number, generation
-6. For collectibles/toys: identify character name, manufacturer, product line, series
-7. For home goods/hardware: identify type, brand, specifications
-8. searchQuery must be specific enough that the FIRST Google Shopping result would be this exact item
-
-CONFIDENCE RULES:
-- "high": you can see brand/model clearly OR you recognize it with certainty from visual features
-- "medium": you recognize the product type and likely brand but not exact model
-- "low": you can only describe what you see, no specific identification possible
-
-Respond ONLY with valid JSON, no markdown fences:
-{
-  "productName": "Brand + Product Name + Model/Style (as specific as possible)",
-  "brand": "exact brand name or null",
-  "model": "exact model/style name or null",
-  "category": "specific product category",
-  "description": "what makes this specific version unique - colorway, edition, key features",
-  "searchQuery": "brand model colorway/style for sale - optimized for Google Shopping",
-  "confidence": "high | medium | low"
-}`,
+              text: "You are a world-class product identification expert. Identify the EXACT product in this image.\n\nRULES:\n1. IDENTIFY specifically, never describe generically\n2. Look for text, logos, labels, tags, packaging first\n3. For fashion: identify brand, style name, colorway\n4. For electronics: identify brand, model number, generation\n5. For collectibles: identify character, manufacturer, product line\n6. For hardware: identify type, brand, specifications\n\nCONFIDENCE:\nhigh = certain identification\nmedium = probable brand or type but not exact model\nlow = can only describe visually\n\nRespond ONLY with valid JSON no markdown:\n{\"productName\": \"Brand Product Model as specific as possible\", \"brand\": \"brand name or null\", \"model\": \"model name or null\", \"category\": \"product category\", \"description\": \"unique features colorway edition\", \"searchQuery\": \"brand model colorway optimized for Google Shopping\", \"confidence\": \"high or medium or low\"}",
+            },
+          ],
+        },
+      ],
+    }),
+  });
 
   const data = await response.json();
 
@@ -87,7 +67,7 @@ Respond ONLY with valid JSON, no markdown fences:
       description: raw,
       searchQuery: raw.slice(0, 80),
       confidence: "low",
-    };,
+    };
   }
 }
 
