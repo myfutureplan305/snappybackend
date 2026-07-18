@@ -2,7 +2,6 @@ import express from "express";
 import cors from "cors";
 import multer from "multer";
 import dotenv from "dotenv";
-import Anthropic from "@anthropic-ai/sdk";
 import { searchRetailers } from "./retailers.js";
 
 dotenv.config();
@@ -13,28 +12,34 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const VISION_MODEL = process.env.VISION_MODEL || "claude-sonnet-4-6";
-
 function fileToBase64(file) {
   return file.buffer.toString("base64");
 }
 
 async function identifyProduct(base64Image, mediaType) {
-  const message = await anthropic.messages.create({
-    model: VISION_MODEL,
-    max_tokens: 600,
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "image",
-            source: { type: "base64", media_type: mediaType, data: base64Image },
-          },
-          {
-            type: "text",
-            text: `You are an expert product identifier. Analyze this photo carefully.
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: "gpt-4o",
+      max_tokens: 600,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:${mediaType};base64,${base64Image}`,
+                detail: "high",
+              },
+            },
+            {
+              type: "text",
+              text: `You are an expert product identifier. Analyze this photo carefully.
 
 MOST IMPORTANT RULE: Honesty over guessing. If you are not certain, say so.
 
@@ -56,18 +61,24 @@ Respond ONLY with valid JSON, no markdown:
   "brand": "brand if visible or known, else null",
   "model": "character or model ONLY if certain, else null",
   "category": "product category",
-  "description": "extremely specific visual details — every color, pattern, accessory, any visible text",
-  "searchQuery": "best search to find this exact item — use costume details when character unknown",
+  "description": "extremely specific visual details - every color, pattern, accessory, any visible text",
+  "searchQuery": "best search to find this exact item - use costume details when character unknown",
   "confidence": "high | medium | low"
 }`,
-          },
-        ],
-      },
-    ],
+            },
+          ],
+        },
+      ],
+    }),
   });
 
-  const textBlock = message.content.find((b) => b.type === "text");
-  const raw = textBlock ? textBlock.text.trim() : "{}";
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error?.message || "OpenAI API error");
+  }
+
+  const raw = data.choices?.[0]?.message?.content?.trim() || "{}";
   const cleaned = raw.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
 
   try {
@@ -107,7 +118,6 @@ app.post("/find", upload.single("photo"), async (req, res) => {
     const base64 = fileToBase64(req.file);
     const product = await identifyProduct(base64, req.file.mimetype);
 
-    // If user provided manual search, use that instead of AI's query
     const searchQuery = (manualQuery && manualQuery.trim())
       ? manualQuery.trim()
       : product.searchQuery;
