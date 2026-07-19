@@ -16,16 +16,17 @@ function fileToBase64(file) {
   return file.buffer.toString("base64");
 }
 
-async function identifyProduct(base64Image, mediaType) {
+// Step 1 — GPT-4o Vision: identify the product from the image
+async function visionIdentify(base64Image, mediaType) {
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+      "Authorization": "Bearer " + process.env.OPENAI_API_KEY,
     },
     body: JSON.stringify({
       model: "gpt-4o",
-      max_tokens: 600,
+      max_tokens: 300,
       messages: [
         {
           role: "user",
@@ -33,13 +34,13 @@ async function identifyProduct(base64Image, mediaType) {
             {
               type: "image_url",
               image_url: {
-                url: `data:${mediaType};base64,${base64Image}`,
-                detail: "high",
+                url: "data:" + mediaType + ";base64," + base64Image,
+                detail: "low",
               },
             },
             {
               type: "text",
-              text: "You are a world-class product identification expert. Identify the EXACT product in this image.\n\nRULES:\n1. IDENTIFY specifically, never describe generically\n2. Look for text, logos, labels, tags, packaging first\n3. For fashion: identify brand, style name, colorway\n4. For electronics: identify brand, model number, generation\n5. For collectibles: identify character, manufacturer, product line\n6. For hardware: identify type, brand, specifications\n\nCONFIDENCE:\nhigh = certain identification\nmedium = probable brand or type but not exact model\nlow = can only describe visually\n\nRespond ONLY with valid JSON no markdown:\n{\"productName\": \"Brand Product Model as specific as possible\", \"brand\": \"brand name or null\", \"model\": \"model name or null\", \"category\": \"product category\", \"description\": \"unique features colorway edition\", \"searchQuery\": \"brand model colorway optimized for Google Shopping\", \"confidence\": \"high or medium or low\"}",
+              text: "Identify this product. Be as specific as possible. Include brand, model, colorway, edition, series. Look for any text or logos. If you cannot identify it specifically, describe it in extreme detail. Respond in 2-3 sentences only.",
             },
           ],
         },
@@ -48,10 +49,32 @@ async function identifyProduct(base64Image, mediaType) {
   });
 
   const data = await response.json();
+  if (!response.ok) throw new Error(data.error?.message || "Vision API error");
+  return data.choices?.[0]?.message?.content?.trim() || "";
+}
 
-  if (!response.ok) {
-    throw new Error(data.error?.message || "OpenAI API error");
-  }
+// Step 2 — GPT-4o-mini: parse the description into structured JSON
+async function parseToJSON(description) {
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + process.env.OPENAI_API_KEY,
+    },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      max_tokens: 300,
+      messages: [
+        {
+          role: "user",
+          content: "Convert this product description into a JSON object for a shopping app. Description: " + description + "\n\nRespond ONLY with valid JSON no markdown:\n{\"productName\": \"full specific product name\", \"brand\": \"brand or null\", \"model\": \"model or null\", \"category\": \"category\", \"description\": \"key features\", \"searchQuery\": \"optimized Google Shopping search query\", \"confidence\": \"high or medium or low\"}",
+        },
+      ],
+    }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error?.message || "Parse API error");
 
   const raw = data.choices?.[0]?.message?.content?.trim() || "{}";
   const cleaned = raw.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
@@ -60,15 +83,21 @@ async function identifyProduct(base64Image, mediaType) {
     return JSON.parse(cleaned);
   } catch (err) {
     return {
-      productName: "Unknown item",
+      productName: description.slice(0, 60),
       brand: null,
       model: null,
       category: null,
-      description: raw,
-      searchQuery: raw.slice(0, 80),
+      description: description,
+      searchQuery: description.slice(0, 80),
       confidence: "low",
     };
   }
+}
+
+async function identifyProduct(base64Image, mediaType) {
+  const description = await visionIdentify(base64Image, mediaType);
+  const product = await parseToJSON(description);
+  return product;
 }
 
 app.get("/health", (req, res) => res.json({ ok: true }));
@@ -110,4 +139,4 @@ app.post("/find", upload.single("photo"), async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Snappy backend running on port ${PORT}`));
+app.listen(PORT, () => console.log("Snappy backend running on port " + PORT));
