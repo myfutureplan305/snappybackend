@@ -40,7 +40,7 @@ async function visionIdentify(base64Image, mediaType) {
             },
             {
               type: "text",
-              text: "Identify this product. Be as specific as possible. Include brand, model, colorway, edition, series. Look for any text or logos. If you cannot identify it specifically, describe it in extreme detail. Respond in 2-3 sentences only.",
+              text: "You are an expert product identifier for a shopping app. Look at this image carefully.\n\nSTEP 1: Look for any text, logos, brand names, labels, or packaging. If found, use them.\n\nSTEP 2: If no text is visible, use visual reasoning:\n- What is the exact shape, material, color, finish?\n- What style era or design trend does it belong to?\n- What brand is known for making exactly this type of product with these visual characteristics?\n- Are there any unique design details, stitching patterns, sole shapes, hardware styles that identify the brand?\n\nSTEP 3: Give your best specific identification. Examples:\n- Shoe with thick white sole, green swoosh = Nike Air Force 1\n- Brown leather bag with gold LV pattern = Louis Vuitton Neverfull\n- Black hinge with square corners, brushed steel = Amerock cabinet hinge\n- Action figure with blonde hair, blue trunks, muscular = check for any text on boots or belt\n\nBe specific. Brand + product name + key features. 2-3 sentences maximum.",
             },
           ],
         },
