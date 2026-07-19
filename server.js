@@ -18,6 +18,39 @@ function fileToBase64(file) {
 
 // Step 1 — GPT-4o Vision: identify the product from the image
 async function visionIdentify(base64Image, mediaType) {
+  const prompt = [
+    "You are an expert product identifier for a shopping app.",
+    "Look at this image carefully.",
+    "",
+    "STEP 1: Identify what TYPE of object this is first.",
+    "Is it a figurine? A holder? A lamp? A stand? A case? Get the function right before the brand.",
+    "",
+    "STEP 2: Look for any text, logos, brand names, labels, or packaging.",
+    "",
+    "STEP 3: Use visual reasoning for brand and model:",
+    "- What is the exact shape, material, color, finish?",
+    "- What is the PRIMARY FUNCTION of this object?",
+    "- A character shaped like a stand or holder is NOT a figurine",
+    "- Look for slots, hooks, openings, bases that indicate function",
+    "",
+    "STEP 4: Examples of getting function right:",
+    "- Sonic figure with controller slot on back = Sonic controller holder NOT Sonic figurine",
+    "- Character with phone slot = phone holder NOT toy",
+    "- Shoe shaped item with opening = shoe planter NOT shoe",
+    "- Animal with pen holes = pen holder NOT animal figurine",
+    "- Action figure with no slots or openings = actual figurine or toy",
+    "",
+    "STEP 5: For fashion and clothing:",
+    "- Identify brand, style name, colorway",
+    "- Look for swoosh, stripes, logos, stitching patterns",
+    "",
+    "STEP 6: For hardware and home goods:",
+    "- Identify material, finish, size, brand",
+    "- Look for any stamped text or markings",
+    "",
+    "Be specific. Object function + brand + product name. 2-3 sentences maximum.",
+  ].join("\n");
+
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -40,7 +73,7 @@ async function visionIdentify(base64Image, mediaType) {
             },
             {
               type: "text",
-              text: "You are an expert product identifier for a shopping app. Look at this image carefully.\n\nSTEP 1: Look for any text, logos, brand names, labels, or packaging. If found, use them.\n\nSTEP 2: If no text is visible, use visual reasoning:\n- What is the exact shape, material, color, finish?\n- What style era or design trend does it belong to?\n- What brand is known for making exactly this type of product with these visual characteristics?\n- Are there any unique design details, stitching patterns, sole shapes, hardware styles that identify the brand?\n\nSTEP 3: Give your best specific identification. Examples:\n- Shoe with thick white sole, green swoosh = Nike Air Force 1\n- Brown leather bag with gold LV pattern = Louis Vuitton Neverfull\n- Black hinge with square corners, brushed steel = Amerock cabinet hinge\n- Action figure with blonde hair, blue trunks, muscular = check for any text on boots or belt\n\nBe specific. Brand + product name + key features. 2-3 sentences maximum.",
+              text: prompt,
             },
           ],
         },
@@ -55,6 +88,22 @@ async function visionIdentify(base64Image, mediaType) {
 
 // Step 2 — GPT-4o-mini: parse the description into structured JSON
 async function parseToJSON(description) {
+  const prompt = [
+    "Convert this product description into a JSON object for a shopping app.",
+    "Description: " + description,
+    "",
+    "Respond ONLY with valid JSON no markdown:",
+    "{",
+    '  "productName": "full specific product name",',
+    '  "brand": "brand or null",',
+    '  "model": "model or null",',
+    '  "category": "category",',
+    '  "description": "key features and function",',
+    '  "searchQuery": "optimized Google Shopping search query",',
+    '  "confidence": "high or medium or low"',
+    "}",
+  ].join("\n");
+
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -67,7 +116,7 @@ async function parseToJSON(description) {
       messages: [
         {
           role: "user",
-          content: "Convert this product description into a JSON object for a shopping app. Description: " + description + "\n\nRespond ONLY with valid JSON no markdown:\n{\"productName\": \"full specific product name\", \"brand\": \"brand or null\", \"model\": \"model or null\", \"category\": \"category\", \"description\": \"key features\", \"searchQuery\": \"optimized Google Shopping search query\", \"confidence\": \"high or medium or low\"}",
+          content: prompt,
         },
       ],
     }),
